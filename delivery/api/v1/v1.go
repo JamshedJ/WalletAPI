@@ -14,13 +14,11 @@ func InitRoutes(e *gin.Engine, svc *services.ServiceFacade) error {
 		Services: svc,
 	}
 
-	_ = ctrl
-
 	v1 := e.Group("/v1")
 
-	w := v1.Group("/wallet")
+	wallet := v1.Group("/wallet")
 	{
-		_ = w
+		wallet.POST("/:id/balance", ctrl.GetWalletBalance)
 	}
 	
 	return nil

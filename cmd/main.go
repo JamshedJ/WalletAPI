@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/JamshedJ/WalletAPI/config"
 	"github.com/JamshedJ/WalletAPI/delivery/api"
+	"github.com/JamshedJ/WalletAPI/domain/repository"
+	"github.com/JamshedJ/WalletAPI/domain/services"
 	"github.com/JamshedJ/WalletAPI/infrastructure/glog"
 	"github.com/JamshedJ/WalletAPI/infrastructure/repository/gormRepo"
 )
@@ -20,11 +22,17 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("cannot initialize database")
 	}
+	defer gormRepo.CloseDB()
 
 	err = gormRepo.AutoMigrate()
 	if err != nil {
 		logger.Fatal().Err(err).Msg("cannot migrate database")
 	}
 
-	api.Run(nil, config.Get().App.Port)
+	repo := repository.RepositoryFacade{
+		WalletRepositoryI: &gormRepo.GormWalletRepo{},
+	}
+	svc := services.NewServiceFacade(logger, repo)
+
+	api.Run(svc, config.Get().App.Port)
 }

@@ -22,5 +22,16 @@ func InitDatabase(dsn string) error {
 }
 
 func AutoMigrate() error {
-	return DB.AutoMigrate()
+	return DB.AutoMigrate(
+		&gormWallet{},
+	)
+}
+
+func CloseDB() error {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return err
+	}
+
+	return sqlDB.Close()
 }

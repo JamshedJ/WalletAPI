@@ -2,10 +2,12 @@ package gormRepo
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/JamshedJ/WalletAPI/domain/dto"
 	"github.com/JamshedJ/WalletAPI/domain/entities"
+	"github.com/JamshedJ/WalletAPI/domain/errs"
 	"github.com/JamshedJ/WalletAPI/domain/repository"
 	"gorm.io/gorm"
 )
@@ -64,6 +66,9 @@ func (g *GormWalletRepo) GetWalletBalance(ctx context.Context, conn any, userID 
 
 	err := db.WithContext(ctx).Where("user_id = ?", userID).First(&gw).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.ErrWalletDoesNotExist
+		}
 		return nil, err
 	}
 
@@ -76,10 +81,13 @@ func (g *GormWalletRepo) CheckWalletExists(ctx context.Context, conn any, userID
 
 	res := db.WithContext(ctx).Model(&gw).Where("user_id = ?", userID).First(&gw)
 	if res.Error != nil {
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
 		return false, res.Error
 	}
 
-	return res.RowsAffected > 0, nil
+	return true, nil
 }
 
 func (g *GormWalletRepo) UpdateWalletBalance(ctx context.Context, conn any, wallet *entities.Wallet) error {

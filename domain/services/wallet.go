@@ -55,45 +55,60 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.To
 			logger.Error().Err(err).Msg("failed to check wallet existence")
 			return err
 		}
-
+	
 		if !isWalletExists {
 			logger.Error().Msg("wallet does not exist")
 			return errs.ErrWalletDoesNotExist
 		}
-
-		wallet, err := s.WalletRepo.GetWalletBalance(ctx, conn, userID)
+	
+		senderWallet, err := s.WalletRepo.GetWalletBalance(ctx, conn, userID)
 		if err != nil {
-			logger.Error().Err(err).Msg("failed to get wallet balance")
+			logger.Error().Err(err).Msg("failed to get sender's wallet balance")
 			return err
 		}
-
-		if wallet.Balance < in.Amount {
+	
+		if senderWallet.Balance < in.Amount {
 			logger.Error().Msg("insufficient balance")
 			return errs.ErrInsufficientBalance
 		}
-
+	
 		// Decrease the balance of the sender's wallet
 		err = s.WalletRepo.UpdateWalletBalance(ctx, conn, &entities.Wallet{
-			ID:      wallet.ID,
-			UserID:  userID,
-			Balance: wallet.Balance - in.Amount,
+			ID:      senderWallet.ID,
+			UserID:  senderWallet.UserID,
+			Balance: senderWallet.Balance - in.Amount,
 		})
 		if err != nil {
 			logger.Error().Err(err).Msg("failed to update sender's wallet balance")
 			return err
 		}
-
+	
+		receiverWallet, err := s.WalletRepo.GetWalletBalance(ctx, conn, in.UserID)
+		if err != nil {
+			logger.Error().Err(err).Msg("failed to get receiver's wallet balance")
+			return err
+		}
+	
+		switch {
+		case receiverWallet.IsIdentified && receiverWallet.Balance + in.Amount > 100000:
+			logger.Error().Msg("receiver's wallet balance exceeds the limit")
+			return errs.ErrWalletBalanceLimitExceeded
+		case !receiverWallet.IsIdentified && receiverWallet.Balance + in.Amount > 10000:
+			logger.Error().Msg("receiver's wallet balance exceeds the limit")
+			return errs.ErrWalletBalanceLimitExceeded
+		}
+		
 		// Increase the balance of the receiver's wallet
 		err = s.WalletRepo.UpdateWalletBalance(ctx, conn, &entities.Wallet{
-			ID:      in.WalletID,
-			UserID:  in.UserID,
-			Balance: wallet.Balance + in.Amount,
+			ID:      receiverWallet.ID,
+			UserID:  receiverWallet.UserID,
+			Balance: receiverWallet.Balance + in.Amount,
 		})
 		if err != nil {
 			logger.Error().Err(err).Msg("failed to update receiver's wallet balance")
 			return err
 		}
-
+	
 		err = s.WalletRepo.CreateTransaction(ctx, conn, &entities.Transaction{
 			WalletID: in.WalletID,
 			UserID:   in.UserID,
@@ -103,7 +118,7 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.To
 			logger.Error().Err(err).Msg("failed to create transaction")
 			return err
 		}
-
+	
 		return nil
 	})
 	if err != nil {

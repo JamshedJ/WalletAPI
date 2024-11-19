@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/JamshedJ/WalletAPI/domain/dto"
@@ -49,6 +50,11 @@ func (s *WalletService) CheckWalletExists(ctx context.Context, userID uint) (boo
 func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.TopUpWalletIn) error {
 	logger := s.Logger.With().Uint("userID", userID).Float64("amount", in.Amount).Logger()
 
+	if err := in.Validate(); err != nil {
+		logger.Error().Err(err).Msg("validation failed")
+		return errors.Join(errs.ErrValidationFailed, err)
+	}
+	
 	err := s.WalletRepo.ExecuteTransaction(ctx, func(conn any) error {
 		isWalletExists, err := s.WalletRepo.CheckWalletExists(ctx, conn, userID)
 		if err != nil {

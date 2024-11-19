@@ -52,6 +52,12 @@ func (g *GormWalletRepo) Conn() any {
 	return DB
 }
 
+func (g *GormWalletRepo) ExecuteTransaction(ctx context.Context, fn func(conn any) error) error {
+	return DB.Transaction(func(tx *gorm.DB) error {
+		return fn(tx)
+	})
+}
+
 func (g *GormWalletRepo) GetWalletBalance(ctx context.Context, conn any, userID string) (*entities.Wallet, error) {
 	db := conn.(*gorm.DB)
 	var gw = &gormWallet{}

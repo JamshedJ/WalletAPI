@@ -9,6 +9,7 @@ import (
 
 type WalletRepositoryI interface {
 	Conn() any
+	ExecuteTransaction(ctx context.Context, fn func(conn any) error) error
 	UpdateWallet(ctx context.Context, conn any, wallet *entities.Wallet) error
 	GetWalletBalance(ctx context.Context, conn any, userID string) (*entities.Wallet, error)
 	CheckWalletExists(ctx context.Context, conn any, userID string) (bool, error)

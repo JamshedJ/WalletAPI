@@ -24,6 +24,7 @@ func InitDatabase(dsn string) error {
 func AutoMigrate() error {
 	return DB.AutoMigrate(
 		&gormWallet{},
+		&gormTransaction{},
 	)
 }
 

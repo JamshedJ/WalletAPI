@@ -19,7 +19,10 @@ func InitRoutes(e *gin.Engine, svc *services.ServiceFacade) error {
 	wallet := v1.Group("/wallet")
 	{
 		wallet.POST("/:id/balance", ctrl.GetWalletBalance)
+		wallet.POST("/:id/exists", ctrl.CheckWalletExists)
+		wallet.POST("/:id/topup", ctrl.TopUpWallet)
+		wallet.POST("/:id/summary", ctrl.GetMonthlySummary)
 	}
-	
+
 	return nil
 }

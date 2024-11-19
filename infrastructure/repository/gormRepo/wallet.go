@@ -4,7 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/JamshedJ/WalletAPI/domain/dto"
 	"github.com/JamshedJ/WalletAPI/domain/entities"
+	"github.com/JamshedJ/WalletAPI/domain/repository"
+	"gorm.io/gorm"
 )
 
 type gormWallet struct {
@@ -40,6 +43,8 @@ func (w *gormWallet) ToEntity() *entities.Wallet {
 	}
 }
 
+var _ repository.WalletRepositoryI = (*GormWalletRepo)(nil)
+
 type GormWalletRepo struct {
 }
 
@@ -48,12 +53,90 @@ func (g *GormWalletRepo) Conn() any {
 }
 
 func (g *GormWalletRepo) GetWalletBalance(ctx context.Context, conn any, userID string) (*entities.Wallet, error) {
+	db := conn.(*gorm.DB)
 	var gw = &gormWallet{}
 
-	err := DB.WithContext(ctx).Where("user_id = ?", userID).First(&gw).Error
+	err := db.WithContext(ctx).Where("user_id = ?", userID).First(&gw).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return gw.ToEntity(), nil
+}
+
+func (g *GormWalletRepo) CheckWalletExists(ctx context.Context, conn any, userID string) (bool, error) {
+	db := conn.(*gorm.DB)
+	var gw = &gormWallet{}
+
+	res := db.WithContext(ctx).Model(&gw).Where("user_id = ?", userID).First(&gw)
+	if res.Error != nil {
+		return false, res.Error
+	}
+
+	return res.RowsAffected > 0, nil
+}
+
+func (g *GormWalletRepo) UpdateWallet(ctx context.Context, conn any, wallet *entities.Wallet) error {
+	db := conn.(*gorm.DB)
+	result := db.WithContext(ctx).Updates(&wallet)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+type gormTransaction struct {
+	ID        uint    `gorm:"primaryKey"`
+	WalletID  uint    `gorm:"not null"`
+	Amount    float64 `gorm:"not null"`
+	CreatedAt time.Time
+}
+
+func (gormTransaction) TableName() string {
+	return "transactions"
+}
+
+func (t *gormTransaction) ParseEntity(e *entities.Transaction) {
+	e.ID = t.ID
+	e.WalletID = t.WalletID
+	e.Amount = t.Amount
+	e.CreatedAt = t.CreatedAt
+}
+
+func (t *gormTransaction) ToEntity() *entities.Transaction {
+	return &entities.Transaction{
+		ID:        t.ID,
+		WalletID:  t.WalletID,
+		Amount:    t.Amount,
+		CreatedAt: t.CreatedAt,
+	}
+}
+
+func (g *GormWalletRepo) CreateTransaction(ctx context.Context, conn any, transaction *entities.Transaction) error {
+	db := conn.(*gorm.DB)
+	err := db.WithContext(ctx).Create(transaction).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (g *GormWalletRepo) GetTransactions(ctx context.Context, conn any, params *dto.GetTransactionsIn) ([]*entities.Transaction, error) {
+	db := conn.(*gorm.DB)
+	var gt = []*gormTransaction{}
+
+	err := db.WithContext(ctx).Where("user_id = ?", params.UserID).Find(&gt).Error
+	if err != nil {
+		return nil, err
+	}
+
+	transactions := []*entities.Transaction{}
+	for _, t := range gt {
+		transaction := t.ToEntity()
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions, nil
 }

@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/JamshedJ/WalletAPI/domain/dto"
@@ -10,19 +11,19 @@ import (
 func (ctrl *ControllerV1) GetWalletBalance(c *gin.Context) {
 	userIDStr := c.Param("id")
 	if userIDStr == "" {
-		c.JSON(400, gin.H{"error": "userID is required"})
+		handleError(c, errors.New("userID is required"))
 		return
 	}
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "invalid userID"})
+		handleError(c, errors.New("invalid userID"))
 		return
 	}
 
 	wallet, err := ctrl.Services.Wallet.GetWalletBalance(c.Request.Context(), uint(userID))
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
@@ -32,19 +33,19 @@ func (ctrl *ControllerV1) GetWalletBalance(c *gin.Context) {
 func (ctrl *ControllerV1) CheckWalletExists(c *gin.Context) {
 	userIDStr := c.Param("id")
 	if userIDStr == "" {
-		c.JSON(400, gin.H{"error": "userID is required"})
+		handleError(c, errors.New("userID is required"))
 		return
 	}
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "invalid userID"})
+		handleError(c, errors.New("invalid userID"))
 		return
 	}
 
 	isWalletExists, err := ctrl.Services.Wallet.CheckWalletExists(c.Request.Context(), uint(userID))
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
@@ -54,13 +55,13 @@ func (ctrl *ControllerV1) CheckWalletExists(c *gin.Context) {
 func (ctrl *ControllerV1) TopUpWallet(c *gin.Context) {
 	userIDStr := c.Param("id")
 	if userIDStr == "" {
-		c.JSON(400, gin.H{"error": "userID is required"})
+		handleError(c, errors.New("userID is required"))
 		return
 	}
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "invalid userID"})
+		handleError(c, errors.New("invalid userID"))
 		return
 	}
 
@@ -71,7 +72,7 @@ func (ctrl *ControllerV1) TopUpWallet(c *gin.Context) {
 	}{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
@@ -81,7 +82,7 @@ func (ctrl *ControllerV1) TopUpWallet(c *gin.Context) {
 		Amount:   req.Amount,
 	})
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
@@ -91,19 +92,19 @@ func (ctrl *ControllerV1) TopUpWallet(c *gin.Context) {
 func (ctrl *ControllerV1) GetMonthlySummary(c *gin.Context) {
 	userIDStr := c.Param("id")
 	if userIDStr == "" {
-		c.JSON(400, gin.H{"error": "userID is required"})
+		handleError(c, errors.New("userID is required"))
 		return
 	}
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "invalid userID"})
+		handleError(c, errors.New("invalid userID"))
 		return
 	}
 
 	summary, err := ctrl.Services.Wallet.GetMonthlySummary(c.Request.Context(), uint(userID))
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 

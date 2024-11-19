@@ -12,7 +12,7 @@ import (
 
 type gormWallet struct {
 	ID           uint    `gorm:"primaryKey"`
-	UserID       string  `gorm:"not null"`
+	UserID       uint    `gorm:"not null"`
 	Balance      float64 `gorm:"not null"`
 	IsIdentified bool    `gorm:"not null"`
 	CreatedAt    time.Time
@@ -58,7 +58,7 @@ func (g *GormWalletRepo) ExecuteTransaction(ctx context.Context, fn func(conn an
 	})
 }
 
-func (g *GormWalletRepo) GetWalletBalance(ctx context.Context, conn any, userID string) (*entities.Wallet, error) {
+func (g *GormWalletRepo) GetWalletBalance(ctx context.Context, conn any, userID uint) (*entities.Wallet, error) {
 	db := conn.(*gorm.DB)
 	var gw = &gormWallet{}
 
@@ -70,7 +70,7 @@ func (g *GormWalletRepo) GetWalletBalance(ctx context.Context, conn any, userID 
 	return gw.ToEntity(), nil
 }
 
-func (g *GormWalletRepo) CheckWalletExists(ctx context.Context, conn any, userID string) (bool, error) {
+func (g *GormWalletRepo) CheckWalletExists(ctx context.Context, conn any, userID uint) (bool, error) {
 	db := conn.(*gorm.DB)
 	var gw = &gormWallet{}
 
@@ -82,9 +82,11 @@ func (g *GormWalletRepo) CheckWalletExists(ctx context.Context, conn any, userID
 	return res.RowsAffected > 0, nil
 }
 
-func (g *GormWalletRepo) UpdateWallet(ctx context.Context, conn any, wallet *entities.Wallet) error {
+func (g *GormWalletRepo) UpdateWalletBalance(ctx context.Context, conn any, wallet *entities.Wallet) error {
 	db := conn.(*gorm.DB)
-	result := db.WithContext(ctx).Updates(&wallet)
+	result := db.WithContext(ctx).Model(&gormWallet{}).Where("user_id = ?", wallet.UserID).Updates(map[string]any{
+		"balance": wallet.Balance,
+	})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -95,6 +97,7 @@ func (g *GormWalletRepo) UpdateWallet(ctx context.Context, conn any, wallet *ent
 type gormTransaction struct {
 	ID        uint    `gorm:"primaryKey"`
 	WalletID  uint    `gorm:"not null"`
+	UserID    uint    `gorm:"not null"`
 	Amount    float64 `gorm:"not null"`
 	CreatedAt time.Time
 }
@@ -106,6 +109,7 @@ func (gormTransaction) TableName() string {
 func (t *gormTransaction) ParseEntity(e *entities.Transaction) {
 	e.ID = t.ID
 	e.WalletID = t.WalletID
+	e.UserID = t.UserID
 	e.Amount = t.Amount
 	e.CreatedAt = t.CreatedAt
 }
@@ -114,6 +118,7 @@ func (t *gormTransaction) ToEntity() *entities.Transaction {
 	return &entities.Transaction{
 		ID:        t.ID,
 		WalletID:  t.WalletID,
+		UserID:    t.UserID,
 		Amount:    t.Amount,
 		CreatedAt: t.CreatedAt,
 	}

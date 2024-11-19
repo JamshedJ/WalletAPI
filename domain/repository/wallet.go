@@ -10,9 +10,9 @@ import (
 type WalletRepositoryI interface {
 	Conn() any
 	ExecuteTransaction(ctx context.Context, fn func(conn any) error) error
-	UpdateWallet(ctx context.Context, conn any, wallet *entities.Wallet) error
-	GetWalletBalance(ctx context.Context, conn any, userID string) (*entities.Wallet, error)
-	CheckWalletExists(ctx context.Context, conn any, userID string) (bool, error)
+	UpdateWalletBalance(ctx context.Context, conn any, wallet *entities.Wallet) error
+	GetWalletBalance(ctx context.Context, conn any, userID uint) (*entities.Wallet, error)
+	CheckWalletExists(ctx context.Context, conn any, userID uint) (bool, error)
 	CreateTransaction(ctx context.Context, conn any, transaction *entities.Transaction) error
 	GetTransactions(ctx context.Context, conn any, params *dto.GetTransactionsIn) ([]*entities.Transaction, error)
 }

@@ -12,21 +12,21 @@ import (
 )
 
 type WalletServiceI interface {
-	TopUpWallet(ctx context.Context, userID string, in *dto.TopUpWalletIn) error
-	GetWalletBalance(ctx context.Context, userID string) (*entities.Wallet, error)
-	CheckWalletExists(ctx context.Context, userID string) (bool, error)
-	GetMonthlySummary(ctx context.Context, userID string) (*dto.GetMonthlySummaryOut, error)
+	TopUpWallet(ctx context.Context, userID uint, in *dto.TopUpWalletIn) error
+	GetWalletBalance(ctx context.Context, userID uint) (*entities.Wallet, error)
+	CheckWalletExists(ctx context.Context, userID uint) (bool, error)
+	GetMonthlySummary(ctx context.Context, userID uint) (*dto.GetMonthlySummaryOut, error)
 }
 
 var _ WalletServiceI = (*WalletService)(nil)
 
 type WalletService struct {
-	WalletRepo      repository.WalletRepositoryI
-	Logger          zerolog.Logger
+	WalletRepo repository.WalletRepositoryI
+	Logger     zerolog.Logger
 }
 
-func (s *WalletService) GetWalletBalance(ctx context.Context, userID string) (*entities.Wallet, error) {
-	logger := s.Logger.With().Str("userID", userID).Logger()
+func (s *WalletService) GetWalletBalance(ctx context.Context, userID uint) (*entities.Wallet, error) {
+	logger := s.Logger.With().Uint("userID", userID).Logger()
 	balance, err := s.WalletRepo.GetWalletBalance(ctx, s.WalletRepo.Conn(), userID)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to get wallet balance")
@@ -35,8 +35,8 @@ func (s *WalletService) GetWalletBalance(ctx context.Context, userID string) (*e
 	return balance, nil
 }
 
-func (s *WalletService) CheckWalletExists(ctx context.Context, userID string) (bool, error) {
-	logger := s.Logger.With().Str("userID", userID).Logger()
+func (s *WalletService) CheckWalletExists(ctx context.Context, userID uint) (bool, error) {
+	logger := s.Logger.With().Uint("userID", userID).Logger()
 	isWalletExists, err := s.WalletRepo.CheckWalletExists(ctx, s.WalletRepo.Conn(), userID)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to check wallet existence")
@@ -46,8 +46,8 @@ func (s *WalletService) CheckWalletExists(ctx context.Context, userID string) (b
 	return isWalletExists, nil
 }
 
-func (s *WalletService) TopUpWallet(ctx context.Context, userID string, in *dto.TopUpWalletIn) error {
-	logger := s.Logger.With().Str("userID", userID).Float64("amount", in.Amount).Logger()
+func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.TopUpWalletIn) error {
+	logger := s.Logger.With().Uint("userID", userID).Float64("amount", in.Amount).Logger()
 
 	err := s.WalletRepo.ExecuteTransaction(ctx, func(conn any) error {
 		isWalletExists, err := s.WalletRepo.CheckWalletExists(ctx, conn, userID)
@@ -67,23 +67,36 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID string, in *dto.
 			return err
 		}
 
-		if wallet.Balance+in.Amount > 100000 {
-			logger.Error().Msg("wallet balance cannot exceed 100000")
-			return errs.ErrWalletBalanceLimitExceeded
+		if wallet.Balance < in.Amount {
+			logger.Error().Msg("insufficient balance")
+			return errs.ErrInsufficientBalance
 		}
 
-		err = s.WalletRepo.UpdateWallet(ctx, conn, &entities.Wallet{
+		// Decrease the balance of the sender's wallet
+		err = s.WalletRepo.UpdateWalletBalance(ctx, conn, &entities.Wallet{
 			ID:      wallet.ID,
 			UserID:  userID,
+			Balance: wallet.Balance - in.Amount,
+		})
+		if err != nil {
+			logger.Error().Err(err).Msg("failed to update sender's wallet balance")
+			return err
+		}
+
+		// Increase the balance of the receiver's wallet
+		err = s.WalletRepo.UpdateWalletBalance(ctx, conn, &entities.Wallet{
+			ID:      in.WalletID,
+			UserID:  in.UserID,
 			Balance: wallet.Balance + in.Amount,
 		})
 		if err != nil {
-			logger.Error().Err(err).Msg("failed to update wallet balance")
+			logger.Error().Err(err).Msg("failed to update receiver's wallet balance")
 			return err
 		}
 
 		err = s.WalletRepo.CreateTransaction(ctx, conn, &entities.Transaction{
-			WalletID: wallet.ID,
+			WalletID: in.WalletID,
+			UserID:   in.UserID,
 			Amount:   in.Amount,
 		})
 		if err != nil {
@@ -93,7 +106,6 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID string, in *dto.
 
 		return nil
 	})
-
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to top up wallet")
 		return err
@@ -103,9 +115,8 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID string, in *dto.
 	return nil
 }
 
-
-func (s *WalletService) GetMonthlySummary(ctx context.Context, userID string) (*dto.GetMonthlySummaryOut, error) {
-	logger := s.Logger.With().Str("userID", userID).Logger()
+func (s *WalletService) GetMonthlySummary(ctx context.Context, userID uint) (*dto.GetMonthlySummaryOut, error) {
+	logger := s.Logger.With().Uint("userID", userID).Logger()
 
 	startOfMonth := time.Now().AddDate(0, 0, -time.Now().Day()+1)
 	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Second)

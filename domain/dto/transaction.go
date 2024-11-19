@@ -3,7 +3,7 @@ package dto
 import "time"
 
 type GetTransactionsIn struct {
-	UserID       string
+	UserID       uint
 	StartOfMonth time.Time
 	EndOfMonth   time.Time
 }
@@ -14,6 +14,6 @@ type CreateTransactionIn struct {
 }
 
 type GetMonthlySummaryOut struct {
-	TotalTransactions int
-	TotalAmount       float64
+	TotalTransactions int     `json:"total_transactions"`
+	TotalAmount       float64 `json:"total_amount"`
 }

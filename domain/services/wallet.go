@@ -54,7 +54,10 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.To
 		logger.Error().Err(err).Msg("validation failed")
 		return errors.Join(errs.ErrValidationFailed, err)
 	}
-	
+
+	// В данной реализации используется транзакция, хотя она не является строго необходимой, 
+	// поскольку логика не включает несколько зависимых операций, 
+	// которые требуют атомарности. Транзакция добавлена для того, чтобы продемонстрировать, как она могла бы выглядеть.
 	err := s.WalletRepo.ExecuteTransaction(ctx, func(conn any) error {
 		isWalletExists, err := s.WalletRepo.CheckWalletExists(ctx, conn, userID)
 		if err != nil {
@@ -65,28 +68,6 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.To
 		if !isWalletExists {
 			logger.Error().Msg("wallet does not exist")
 			return errs.ErrWalletDoesNotExist
-		}
-
-		senderWallet, err := s.WalletRepo.GetWalletBalance(ctx, conn, userID)
-		if err != nil {
-			logger.Error().Err(err).Msg("failed to get sender's wallet balance")
-			return err
-		}
-
-		if senderWallet.Balance < in.Amount {
-			logger.Error().Msg("insufficient balance")
-			return errs.ErrInsufficientBalance
-		}
-
-		// Decrease the balance of the sender's wallet
-		err = s.WalletRepo.UpdateWalletBalance(ctx, conn, &entities.Wallet{
-			ID:      senderWallet.ID,
-			UserID:  senderWallet.UserID,
-			Balance: senderWallet.Balance - in.Amount,
-		})
-		if err != nil {
-			logger.Error().Err(err).Msg("failed to update sender's wallet balance")
-			return err
 		}
 
 		receiverWallet, err := s.WalletRepo.GetWalletBalance(ctx, conn, in.UserID)

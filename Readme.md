@@ -25,6 +25,7 @@ API методы сервиса:
 - **Gorm postgres**
 - **Zerolog**
 - **Viper**
+- **Mockery**
 
 ## Запуск проекта
 1. Клонируйте репозиторий: `git clone https://github.com/JamshedJ/WalletAPI.git`
@@ -42,6 +43,12 @@ API методы сервиса:
    ```bash
    go run cmd/main.go
 5. Перед использованием API необходимо вводить тестовые данные в таблицу wallets.
+
+## Тесты
+Для запуска тестов используйте команду:
+```bash
+    go test ./...
+```
 
 ## Примеры запросов в Postman
 

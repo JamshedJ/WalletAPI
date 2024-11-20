@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"io"
 	"net/http"
@@ -25,7 +26,7 @@ func (ctrl *ControllerV1) AuthMiddleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to read request body"})
 			return
 		}
-		c.Request.Body = io.NopCloser(c.Request.Body)
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 		computedDigest := utils.ComputeHMACSHA1(body, config.Get().App.SecretKey)
 		if !hmac.Equal([]byte(digest), []byte(computedDigest)) {

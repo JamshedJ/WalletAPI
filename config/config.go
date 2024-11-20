@@ -17,6 +17,7 @@ type Config struct {
 	App struct {
 		Port        int
 		Environment string
+		SecretKey   string
 		Database    struct {
 			Dsn string
 		}

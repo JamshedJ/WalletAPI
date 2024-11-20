@@ -9,11 +9,7 @@ import (
 )
 
 func (ctrl *ControllerV1) GetWalletBalance(c *gin.Context) {
-	userIDStr := c.Param("id")
-	if userIDStr == "" {
-		handleError(c, errors.New("userID is required"))
-		return
-	}
+	userIDStr := c.GetHeader("X-UserId")
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
@@ -31,11 +27,7 @@ func (ctrl *ControllerV1) GetWalletBalance(c *gin.Context) {
 }
 
 func (ctrl *ControllerV1) CheckWalletExists(c *gin.Context) {
-	userIDStr := c.Param("id")
-	if userIDStr == "" {
-		handleError(c, errors.New("userID is required"))
-		return
-	}
+	userIDStr := c.GetHeader("X-UserId")
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
@@ -53,11 +45,7 @@ func (ctrl *ControllerV1) CheckWalletExists(c *gin.Context) {
 }
 
 func (ctrl *ControllerV1) TopUpWallet(c *gin.Context) {
-	userIDStr := c.Param("id")
-	if userIDStr == "" {
-		handleError(c, errors.New("userID is required"))
-		return
-	}
+	userIDStr := c.GetHeader("X-UserId")
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
@@ -90,11 +78,7 @@ func (ctrl *ControllerV1) TopUpWallet(c *gin.Context) {
 }
 
 func (ctrl *ControllerV1) GetMonthlySummary(c *gin.Context) {
-	userIDStr := c.Param("id")
-	if userIDStr == "" {
-		handleError(c, errors.New("userID is required"))
-		return
-	}
+	userIDStr := c.GetHeader("X-UserId")
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {

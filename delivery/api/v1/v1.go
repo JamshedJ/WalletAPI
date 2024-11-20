@@ -16,12 +16,12 @@ func InitRoutes(e *gin.Engine, svc *services.ServiceFacade) error {
 
 	v1 := e.Group("/v1")
 
-	wallet := v1.Group("/wallet")
+	wallet := v1.Group("/wallet", ctrl.AuthMiddleware())
 	{
-		wallet.POST("/:id/balance", ctrl.GetWalletBalance)
-		wallet.POST("/:id/exists", ctrl.CheckWalletExists)
-		wallet.POST("/:id/topup", ctrl.TopUpWallet)
-		wallet.POST("/:id/summary", ctrl.GetMonthlySummary)
+		wallet.POST("/balance", ctrl.GetWalletBalance)
+		wallet.POST("/exists", ctrl.CheckWalletExists)
+		wallet.POST("/topup", ctrl.TopUpWallet)
+		wallet.POST("/summary", ctrl.GetMonthlySummary)
 	}
 
 	return nil

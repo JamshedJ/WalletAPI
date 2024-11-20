@@ -1,0 +1,7 @@
+with-expecter: true
+packages:
+  github.com/JamshedJ/WalletAPI/domain/repository:
+    interfaces:
+      WalletRepositoryI:
+        dir: "mocks/"
+

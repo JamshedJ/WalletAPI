@@ -1,0 +1,240 @@
+openapi: 3.0.0
+info:
+  title: Wallet API
+  description: API for managing wallets, including balance checks, top-ups, and monthly summaries.
+  version: 1.0.0
+  contact:
+    name: Jamshed Juraev
+    email: jamshedjuraev95@gmail.com
+
+paths:
+  /v1/wallet/balance:
+    post:
+      summary: Get wallet balance
+      description: Returns the current balance of the user's wallet.
+      operationId: GetWalletBalance
+      tags:
+        - Wallet
+      security:
+        - DigestAuth: []
+      parameters:
+        - name: X-UserId
+          in: header
+          required: true
+          description: The ID of the user.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Wallet balance retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wallet_balance:
+                    type: number
+                    format: float
+                    example: 1000.0
+        '400':
+          description: Invalid user ID or bad input data.
+        '404':
+          description: Wallet does not exist.
+        '401':
+          description: Unauthorized access due to invalid headers or digest.
+        '422':
+          description: Validation failed.
+
+  /v1/wallet/exists:
+    post:
+      summary: Check if wallet exists
+      description: Verifies if a wallet exists for the specified user.
+      operationId: CheckWalletExists
+      tags:
+        - Wallet
+      security:
+        - DigestAuth: []
+      parameters:
+        - name: X-UserId
+          in: header
+          required: true
+          description: The ID of the user.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Wallet existence status retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_wallet_exists:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid user ID.
+        '401':
+          description: Unauthorized access due to invalid headers or digest.
+        '404':
+          description: Wallet does not exist.
+
+  /v1/wallet/topup:
+    post:
+      summary: Top up wallet
+      description: Adds funds to the user's wallet.
+      operationId: TopUpWallet
+      tags:
+        - Wallet
+      security:
+        - DigestAuth: []
+      parameters:
+        - name: X-UserId
+          in: header
+          required: true
+          description: The ID of the user.
+          schema:
+            type: string
+      requestBody:
+        description: The details for topping up the wallet.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet_id:
+                  type: integer
+                  example: 1
+                user_id:
+                  type: integer
+                  example: 1
+                amount:
+                  type: number
+                  format: float
+                  example: 50.0
+      responses:
+        '200':
+          description: Wallet topped up successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: wallet topped up successfully
+        '400':
+          description: Invalid input data or insufficient balance.
+        '404':
+          description: Wallet does not exist.
+        '401':
+          description: Unauthorized access due to invalid headers or digest.
+        '422':
+          description: Validation failed.
+
+  /v1/wallet/summary:
+    post:
+      summary: Get monthly wallet summary
+      description: Retrieves the monthly summary of the user's wallet transactions.
+      operationId: GetMonthlySummary
+      tags:
+        - Wallet
+      security:
+        - DigestAuth: []
+      parameters:
+        - name: X-UserId
+          in: header
+          required: true
+          description: The ID of the user.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Monthly summary retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMonthlySummaryOut"
+
+        '400':
+          description: Invalid user ID or data.
+        '401':
+          description: Unauthorized access due to invalid headers or digest.
+
+components:
+  securitySchemes:
+    DigestAuth:
+      type: apiKey
+      in: header
+      name: X-Digest
+      
+  schemas:
+    GetMonthlySummaryOut:
+      type: object
+      properties:
+        total_transactions:
+          type: integer
+          description: The total number of transactions for the month.
+          example: 23
+        total_amount:
+          type: number
+          format: float
+          description: The total amount of money transacted for the month.
+          example: 42000.00
+
+  responses:
+    ErrInvalidInput:
+      description: Invalid input data provided by the user.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: ErrInvalidInput
+
+    ErrWalletDoesNotExist:
+      description: The requested wallet does not exist.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: ErrWalletDoesNotExist
+
+    ErrValidationFailed:
+      description: Validation failed for the input data.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: ErrValidationFailed
+
+    ErrInsufficientBalance:
+      description: The wallet does not have sufficient balance for the operation.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: ErrInsufficientBalance
+
+    ErrWalletBalanceLimitExceeded:
+      description: The wallet balance exceeds the allowed limit.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: ErrWalletBalanceLimitExceeded

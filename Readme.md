@@ -33,6 +33,7 @@ API методы сервиса:
 - **Zerolog**
 - **Viper**
 - **Mockery**
+- **Swagger api docs**
 
 ## Запуск проекта
 1. Клонируйте репозиторий: `git clone https://github.com/JamshedJ/WalletAPI.git`

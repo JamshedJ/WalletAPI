@@ -45,7 +45,7 @@ func (ctrl *ControllerV1) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("partnerID", partnerID)
+		c.Set("partnerID", partnerIDStr)
 		c.Next()
 	}
 }

@@ -96,6 +96,7 @@ func (s *WalletService) TopUpWallet(ctx context.Context, in *dto.TopUpWalletIn) 
 
 		err = s.WalletRepo.CreateTransaction(ctx, conn, &entities.Transaction{
 			PartnerID: in.PartnerID,
+			WalletID:  receiverWallet.ID,
 			Amount:    in.Amount,
 		})
 		if err != nil {

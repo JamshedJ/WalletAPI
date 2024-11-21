@@ -15,6 +15,7 @@ import (
 
 type gormWallet struct {
 	ID           uint    `gorm:"primaryKey"`
+	Account      string  `gorm:"not null"`
 	Balance      float64 `gorm:"not null"`
 	IsIdentified bool    `gorm:"not null"`
 	CreatedAt    time.Time
@@ -27,6 +28,7 @@ func (gormWallet) TableName() string {
 
 func (w *gormWallet) ParseEntity(e *entities.Wallet) {
 	e.ID = w.ID
+	e.Account = w.Account
 	e.Balance = w.Balance
 	e.IsIdentified = w.IsIdentified
 	e.CreatedAt = w.CreatedAt
@@ -36,6 +38,7 @@ func (w *gormWallet) ParseEntity(e *entities.Wallet) {
 func (w *gormWallet) ToEntity() *entities.Wallet {
 	return &entities.Wallet{
 		ID:           w.ID,
+		Account:      w.Account,
 		Balance:      w.Balance,
 		IsIdentified: w.IsIdentified,
 		CreatedAt:    w.CreatedAt,

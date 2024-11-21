@@ -9,14 +9,15 @@ import (
 	"github.com/JamshedJ/WalletAPI/domain/entities"
 	"github.com/JamshedJ/WalletAPI/domain/errs"
 	"github.com/JamshedJ/WalletAPI/domain/repository"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
 
 type WalletServiceI interface {
-	GetWalletBalance(ctx context.Context, userID uint) (*entities.Wallet, error)
-	CheckWalletExists(ctx context.Context, userID uint) (bool, error)
-	TopUpWallet(ctx context.Context, userID uint, in *dto.TopUpWalletIn) error
-	GetMonthlySummary(ctx context.Context, userID uint) (*dto.GetMonthlySummaryOut, error)
+	GetWalletBalance(ctx context.Context, account string) (*entities.Wallet, error)
+	CheckWalletExists(ctx context.Context, account string) (bool, error)
+	TopUpWallet(ctx context.Context, in *dto.TopUpWalletIn) error
+	GetMonthlySummary(ctx context.Context, partnerID uuid.UUID) (*dto.GetMonthlySummaryOut, error)
 }
 
 var _ WalletServiceI = (*WalletService)(nil)
@@ -26,9 +27,9 @@ type WalletService struct {
 	Logger     zerolog.Logger
 }
 
-func (s *WalletService) GetWalletBalance(ctx context.Context, userID uint) (*entities.Wallet, error) {
-	logger := s.Logger.With().Uint("userID", userID).Logger()
-	balance, err := s.WalletRepo.GetWalletBalance(ctx, s.WalletRepo.Conn(), userID)
+func (s *WalletService) GetWalletBalance(ctx context.Context, account string) (*entities.Wallet, error) {
+	logger := s.Logger.With().Str("account", account).Logger()
+	balance, err := s.WalletRepo.GetWalletBalance(ctx, s.WalletRepo.Conn(), account)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to get wallet balance")
 		return nil, err
@@ -36,9 +37,9 @@ func (s *WalletService) GetWalletBalance(ctx context.Context, userID uint) (*ent
 	return balance, nil
 }
 
-func (s *WalletService) CheckWalletExists(ctx context.Context, userID uint) (bool, error) {
-	logger := s.Logger.With().Uint("userID", userID).Logger()
-	isWalletExists, err := s.WalletRepo.CheckWalletExists(ctx, s.WalletRepo.Conn(), userID)
+func (s *WalletService) CheckWalletExists(ctx context.Context, account string) (bool, error) {
+	logger := s.Logger.With().Str("account", account).Logger()
+	isWalletExists, err := s.WalletRepo.CheckWalletExists(ctx, s.WalletRepo.Conn(), account)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to check wallet existence")
 		return false, err
@@ -47,19 +48,16 @@ func (s *WalletService) CheckWalletExists(ctx context.Context, userID uint) (boo
 	return isWalletExists, nil
 }
 
-func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.TopUpWalletIn) error {
-	logger := s.Logger.With().Uint("userID", userID).Float64("amount", in.Amount).Logger()
+func (s *WalletService) TopUpWallet(ctx context.Context, in *dto.TopUpWalletIn) error {
+	logger := s.Logger.With().Str("partner_id", in.PartnerID.String()).Str("account", in.Account).Float64("amount", in.Amount).Logger()
 
 	if err := in.Validate(); err != nil {
 		logger.Error().Err(err).Msg("validation failed")
 		return errors.Join(errs.ErrValidationFailed, err)
 	}
 
-	// В данной реализации используется транзакция, хотя она не является строго необходимой, 
-	// поскольку логика не включает несколько зависимых операций, 
-	// которые требуют атомарности. Транзакция добавлена для того, чтобы продемонстрировать, как она могла бы выглядеть.
 	err := s.WalletRepo.ExecuteTransaction(ctx, func(conn any) error {
-		isWalletExists, err := s.WalletRepo.CheckWalletExists(ctx, conn, userID)
+		isWalletExists, err := s.WalletRepo.CheckWalletExists(ctx, conn, in.Account)
 		if err != nil {
 			logger.Error().Err(err).Msg("failed to check wallet existence")
 			return err
@@ -70,7 +68,7 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.To
 			return errs.ErrWalletDoesNotExist
 		}
 
-		receiverWallet, err := s.WalletRepo.GetWalletBalance(ctx, conn, in.UserID)
+		receiverWallet, err := s.WalletRepo.GetWalletBalance(ctx, conn, in.Account)
 		if err != nil {
 			logger.Error().Err(err).Msg("failed to get receiver's wallet balance")
 			return err
@@ -88,7 +86,6 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.To
 		// Increase the balance of the receiver's wallet
 		err = s.WalletRepo.UpdateWalletBalance(ctx, conn, &entities.Wallet{
 			ID:      receiverWallet.ID,
-			UserID:  receiverWallet.UserID,
 			Balance: receiverWallet.Balance + in.Amount,
 		})
 		if err != nil {
@@ -97,9 +94,8 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.To
 		}
 
 		err = s.WalletRepo.CreateTransaction(ctx, conn, &entities.Transaction{
-			WalletID: in.WalletID,
-			UserID:   in.UserID,
-			Amount:   in.Amount,
+			PartnerID: in.PartnerID,
+			Amount:    in.Amount,
 		})
 		if err != nil {
 			logger.Error().Err(err).Msg("failed to create transaction")
@@ -117,14 +113,15 @@ func (s *WalletService) TopUpWallet(ctx context.Context, userID uint, in *dto.To
 	return nil
 }
 
-func (s *WalletService) GetMonthlySummary(ctx context.Context, userID uint) (*dto.GetMonthlySummaryOut, error) {
-	logger := s.Logger.With().Uint("userID", userID).Logger()
+func (s *WalletService) GetMonthlySummary(ctx context.Context, partnerID uuid.UUID) (*dto.GetMonthlySummaryOut, error) {
+	logger := s.Logger.With().Str("partner_id", partnerID.String()).Logger()
 
-	startOfMonth := time.Now().AddDate(0, 0, -time.Now().Day()+1)
-	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Second)
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()) // Устанавка начало месяца на 00:00:00
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Microsecond)                // Конец месяца - последняя микросекунда
 
 	transactions, err := s.WalletRepo.GetTransactions(ctx, s.WalletRepo.Conn(), &dto.GetTransactionsIn{
-		UserID:       userID,
+		PartnerID:    partnerID,
 		StartOfMonth: startOfMonth,
 		EndOfMonth:   endOfMonth,
 	})

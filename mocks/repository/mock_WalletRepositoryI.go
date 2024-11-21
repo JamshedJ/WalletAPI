@@ -24,9 +24,9 @@ func (_m *MockWalletRepositoryI) EXPECT() *MockWalletRepositoryI_Expecter {
 	return &MockWalletRepositoryI_Expecter{mock: &_m.Mock}
 }
 
-// CheckWalletExists provides a mock function with given fields: ctx, conn, userID
-func (_m *MockWalletRepositoryI) CheckWalletExists(ctx context.Context, conn interface{}, userID uint) (bool, error) {
-	ret := _m.Called(ctx, conn, userID)
+// CheckWalletExists provides a mock function with given fields: ctx, conn, account
+func (_m *MockWalletRepositoryI) CheckWalletExists(ctx context.Context, conn interface{}, account string) (bool, error) {
+	ret := _m.Called(ctx, conn, account)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CheckWalletExists")
@@ -34,17 +34,17 @@ func (_m *MockWalletRepositoryI) CheckWalletExists(ctx context.Context, conn int
 
 	var r0 bool
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, uint) (bool, error)); ok {
-		return rf(ctx, conn, userID)
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, string) (bool, error)); ok {
+		return rf(ctx, conn, account)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, uint) bool); ok {
-		r0 = rf(ctx, conn, userID)
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, string) bool); ok {
+		r0 = rf(ctx, conn, account)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, interface{}, uint) error); ok {
-		r1 = rf(ctx, conn, userID)
+	if rf, ok := ret.Get(1).(func(context.Context, interface{}, string) error); ok {
+		r1 = rf(ctx, conn, account)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -60,14 +60,14 @@ type MockWalletRepositoryI_CheckWalletExists_Call struct {
 // CheckWalletExists is a helper method to define mock.On call
 //   - ctx context.Context
 //   - conn interface{}
-//   - userID uint
-func (_e *MockWalletRepositoryI_Expecter) CheckWalletExists(ctx interface{}, conn interface{}, userID interface{}) *MockWalletRepositoryI_CheckWalletExists_Call {
-	return &MockWalletRepositoryI_CheckWalletExists_Call{Call: _e.mock.On("CheckWalletExists", ctx, conn, userID)}
+//   - account string
+func (_e *MockWalletRepositoryI_Expecter) CheckWalletExists(ctx interface{}, conn interface{}, account interface{}) *MockWalletRepositoryI_CheckWalletExists_Call {
+	return &MockWalletRepositoryI_CheckWalletExists_Call{Call: _e.mock.On("CheckWalletExists", ctx, conn, account)}
 }
 
-func (_c *MockWalletRepositoryI_CheckWalletExists_Call) Run(run func(ctx context.Context, conn interface{}, userID uint)) *MockWalletRepositoryI_CheckWalletExists_Call {
+func (_c *MockWalletRepositoryI_CheckWalletExists_Call) Run(run func(ctx context.Context, conn interface{}, account string)) *MockWalletRepositoryI_CheckWalletExists_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(interface{}), args[2].(uint))
+		run(args[0].(context.Context), args[1].(interface{}), args[2].(string))
 	})
 	return _c
 }
@@ -77,7 +77,7 @@ func (_c *MockWalletRepositoryI_CheckWalletExists_Call) Return(_a0 bool, _a1 err
 	return _c
 }
 
-func (_c *MockWalletRepositoryI_CheckWalletExists_Call) RunAndReturn(run func(context.Context, interface{}, uint) (bool, error)) *MockWalletRepositoryI_CheckWalletExists_Call {
+func (_c *MockWalletRepositoryI_CheckWalletExists_Call) RunAndReturn(run func(context.Context, interface{}, string) (bool, error)) *MockWalletRepositoryI_CheckWalletExists_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -284,9 +284,9 @@ func (_c *MockWalletRepositoryI_GetTransactions_Call) RunAndReturn(run func(cont
 	return _c
 }
 
-// GetWalletBalance provides a mock function with given fields: ctx, conn, userID
-func (_m *MockWalletRepositoryI) GetWalletBalance(ctx context.Context, conn interface{}, userID uint) (*entities.Wallet, error) {
-	ret := _m.Called(ctx, conn, userID)
+// GetWalletBalance provides a mock function with given fields: ctx, conn, account
+func (_m *MockWalletRepositoryI) GetWalletBalance(ctx context.Context, conn interface{}, account string) (*entities.Wallet, error) {
+	ret := _m.Called(ctx, conn, account)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetWalletBalance")
@@ -294,19 +294,19 @@ func (_m *MockWalletRepositoryI) GetWalletBalance(ctx context.Context, conn inte
 
 	var r0 *entities.Wallet
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, uint) (*entities.Wallet, error)); ok {
-		return rf(ctx, conn, userID)
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, string) (*entities.Wallet, error)); ok {
+		return rf(ctx, conn, account)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, uint) *entities.Wallet); ok {
-		r0 = rf(ctx, conn, userID)
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, string) *entities.Wallet); ok {
+		r0 = rf(ctx, conn, account)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*entities.Wallet)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, interface{}, uint) error); ok {
-		r1 = rf(ctx, conn, userID)
+	if rf, ok := ret.Get(1).(func(context.Context, interface{}, string) error); ok {
+		r1 = rf(ctx, conn, account)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -322,14 +322,14 @@ type MockWalletRepositoryI_GetWalletBalance_Call struct {
 // GetWalletBalance is a helper method to define mock.On call
 //   - ctx context.Context
 //   - conn interface{}
-//   - userID uint
-func (_e *MockWalletRepositoryI_Expecter) GetWalletBalance(ctx interface{}, conn interface{}, userID interface{}) *MockWalletRepositoryI_GetWalletBalance_Call {
-	return &MockWalletRepositoryI_GetWalletBalance_Call{Call: _e.mock.On("GetWalletBalance", ctx, conn, userID)}
+//   - account string
+func (_e *MockWalletRepositoryI_Expecter) GetWalletBalance(ctx interface{}, conn interface{}, account interface{}) *MockWalletRepositoryI_GetWalletBalance_Call {
+	return &MockWalletRepositoryI_GetWalletBalance_Call{Call: _e.mock.On("GetWalletBalance", ctx, conn, account)}
 }
 
-func (_c *MockWalletRepositoryI_GetWalletBalance_Call) Run(run func(ctx context.Context, conn interface{}, userID uint)) *MockWalletRepositoryI_GetWalletBalance_Call {
+func (_c *MockWalletRepositoryI_GetWalletBalance_Call) Run(run func(ctx context.Context, conn interface{}, account string)) *MockWalletRepositoryI_GetWalletBalance_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(interface{}), args[2].(uint))
+		run(args[0].(context.Context), args[1].(interface{}), args[2].(string))
 	})
 	return _c
 }
@@ -339,7 +339,7 @@ func (_c *MockWalletRepositoryI_GetWalletBalance_Call) Return(_a0 *entities.Wall
 	return _c
 }
 
-func (_c *MockWalletRepositoryI_GetWalletBalance_Call) RunAndReturn(run func(context.Context, interface{}, uint) (*entities.Wallet, error)) *MockWalletRepositoryI_GetWalletBalance_Call {
+func (_c *MockWalletRepositoryI_GetWalletBalance_Call) RunAndReturn(run func(context.Context, interface{}, string) (*entities.Wallet, error)) *MockWalletRepositoryI_GetWalletBalance_Call {
 	_c.Call.Return(run)
 	return _c
 }

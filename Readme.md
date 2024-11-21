@@ -42,7 +42,6 @@ API методы сервиса:
    app:
     port: 8080
     environment: "development" # or "production"
-    secretkey: "your-secret-key"
     database:
         dsn: "host=localhost port=5432 user=postgres password=postgres dbname=wallet sslmode=disable"
 
@@ -65,7 +64,7 @@ URL: http://localhost:8080/v1/wallet/balance
 Метод: POST
 Тело запроса (raw, JSON): Нет тела запроса, так как проверка только по X-UserId.
 Headers:
-    X-UserId: <user-id> (id пользователя).
+    X-UserId: <partner-id> (id партнера).
     X-Digest: <computed-digest> (вычисляется с помощью HMAC-SHA1).
 
 
@@ -74,7 +73,7 @@ URL: http://localhost:8080/v1/wallet/exists
 Метод: POST
 Тело запроса (raw, JSON): Нет тела запроса, так как проверка только по X-UserId.
 Headers:
-    X-UserId: <user-id>
+    X-UserId: <partner-id>
     X-Digest: <computed-digest>
 
 
@@ -85,14 +84,13 @@ URL: http://localhost:8080/v1/wallet/topup
 
 ```
 {
-  "wallet_id": 1,
-  "user_id": 1,
+  "account": "992900100299",
   "amount": 100.0
 }
 ```
 
 Headers:
-    X-UserId: <user-id>
+    X-UserId: <partner-id>
     X-Digest: <computed-digest>
 
 
@@ -100,5 +98,5 @@ Headers:
 Метод: POST
 URL: http://localhost:8080/v1/wallet/summary
 Headers:
-    X-UserId: <user-id>
+    X-UserId: <partner-id>
     X-Digest: <computed-digest>

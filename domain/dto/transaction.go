@@ -1,9 +1,13 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type GetTransactionsIn struct {
-	UserID       uint
+	PartnerID    uuid.UUID
 	StartOfMonth time.Time
 	EndOfMonth   time.Time
 }

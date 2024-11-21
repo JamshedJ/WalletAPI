@@ -2,6 +2,7 @@ package gormRepo
 
 import (
 	"context"
+	"time"
 
 	"github.com/JamshedJ/WalletAPI/domain/entities"
 	"github.com/google/uuid"
@@ -12,6 +13,8 @@ type Partner struct {
 	ID        uuid.UUID `gorm:"primaryKey"`
 	Name      string
 	SecretKey string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (p *Partner) ToEntity() *entities.Partner {
@@ -19,6 +22,8 @@ func (p *Partner) ToEntity() *entities.Partner {
 		ID:        p.ID,
 		Name:      p.Name,
 		SecretKey: p.SecretKey,
+		CreatedAt: p.CreatedAt,
+		UpdatedAt: p.UpdatedAt,
 	}
 }
 

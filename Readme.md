@@ -62,7 +62,6 @@ API методы сервиса:
 ### Проверка баланса электронного кошелька
 URL: http://localhost:8080/v1/wallet/balance
 Метод: POST
-Тело запроса (raw, JSON): Нет тела запроса, так как проверка только по X-UserId.
 Headers:
     X-UserId: <partner-id> (id партнера).
     X-Digest: <computed-digest> (вычисляется с помощью HMAC-SHA1).
@@ -71,7 +70,6 @@ Headers:
 ### Проверка существует ли аккаунт электронного кошелька
 URL: http://localhost:8080/v1/wallet/exists
 Метод: POST
-Тело запроса (raw, JSON): Нет тела запроса, так как проверка только по X-UserId.
 Headers:
     X-UserId: <partner-id>
     X-Digest: <computed-digest>

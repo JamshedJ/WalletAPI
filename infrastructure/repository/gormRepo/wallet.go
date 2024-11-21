@@ -15,7 +15,6 @@ import (
 
 type gormWallet struct {
 	ID           uint    `gorm:"primaryKey"`
-	UserID       uint    `gorm:"not null"`
 	Balance      float64 `gorm:"not null"`
 	IsIdentified bool    `gorm:"not null"`
 	CreatedAt    time.Time
@@ -102,10 +101,10 @@ func (g *GormWalletRepo) UpdateWalletBalance(ctx context.Context, conn any, wall
 }
 
 type gormTransaction struct {
-	ID        uint    `gorm:"primaryKey"`
-	WalletID  uint    `gorm:"not null"`
-	PartnerID uuid.UUID    `gorm:"not null"`
-	Amount    float64 `gorm:"not null"`
+	ID        uint      `gorm:"primaryKey"`
+	WalletID  uint      `gorm:"not null"`
+	PartnerID uuid.UUID `gorm:"not null"`
+	Amount    float64   `gorm:"not null"`
 	CreatedAt time.Time
 }
 
@@ -125,7 +124,7 @@ func (t *gormTransaction) ToEntity() *entities.Transaction {
 	return &entities.Transaction{
 		ID:        t.ID,
 		WalletID:  t.WalletID,
-		PartnerID:    t.PartnerID,
+		PartnerID: t.PartnerID,
 		Amount:    t.Amount,
 		CreatedAt: t.CreatedAt,
 	}
@@ -157,4 +156,36 @@ func (g *GormWalletRepo) GetTransactions(ctx context.Context, conn any, params *
 	}
 
 	return transactions, nil
+}
+
+type gormPartner struct {
+	ID        uuid.UUID `gorm:"primaryKey"`
+	Name      string
+	SecretKey string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (p *gormPartner) ToEntity() *entities.Partner {
+	return &entities.Partner{
+		ID:        p.ID,
+		Name:      p.Name,
+		SecretKey: p.SecretKey,
+		CreatedAt: p.CreatedAt,
+		UpdatedAt: p.UpdatedAt,
+	}
+}
+
+func (gormPartner) TableName() string {
+	return "partners"
+}
+
+func (g *GormWalletRepo) GetPartnerByID(ctx context.Context, id uuid.UUID) (*entities.Partner, error) {
+	db := g.Conn().(*gorm.DB)
+	var p gormPartner
+	err := db.WithContext(ctx).First(&p, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return p.ToEntity(), nil
 }

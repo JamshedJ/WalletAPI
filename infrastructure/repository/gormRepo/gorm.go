@@ -25,6 +25,7 @@ func AutoMigrate() error {
 	return DB.AutoMigrate(
 		&gormWallet{},
 		&gormTransaction{},
+		&gormPartner{},
 	)
 }
 

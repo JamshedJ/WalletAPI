@@ -13,18 +13,14 @@ import (
 type ServicesTestSuite struct {
 	suite.Suite
 	WalletRepoMock *repoMock.MockWalletRepositoryI
-	PartnerRepoMock *repoMock.MockPartnerRepositoryI
 	Services       ServiceFacade
 }
 
 func (s *ServicesTestSuite) SetupSuite() {
 	walletRepoMock := repoMock.NewMockWalletRepositoryI(s.T())
-	partnerRepoMock := repoMock.NewMockPartnerRepositoryI(s.T())
 	s.WalletRepoMock = walletRepoMock
-	s.PartnerRepoMock = partnerRepoMock
 	repoFacade := repository.RepositoryFacade{
 		WalletRepositoryI: walletRepoMock,
-		PartnerRepositoryI: partnerRepoMock,
 	}
 
 	s.Services = *NewServiceFacade(zerolog.New(os.Stdout), repoFacade)

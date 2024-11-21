@@ -18,6 +18,7 @@ type WalletServiceI interface {
 	CheckWalletExists(ctx context.Context, account string) (bool, error)
 	TopUpWallet(ctx context.Context, in *dto.TopUpWalletIn) error
 	GetMonthlySummary(ctx context.Context, partnerID uuid.UUID) (*dto.GetMonthlySummaryOut, error)
+	GetPartnerByID(ctx context.Context, partnerID uuid.UUID) (*entities.Partner, error)
 }
 
 var _ WalletServiceI = (*WalletService)(nil)
@@ -140,4 +141,14 @@ func (s *WalletService) GetMonthlySummary(ctx context.Context, partnerID uuid.UU
 		TotalAmount:       totalAmount,
 	}
 	return summary, nil
+}
+
+func (s *WalletService) GetPartnerByID(ctx context.Context, partnerID uuid.UUID) (*entities.Partner, error) {
+	logger := s.Logger.With().Str("partner_id", partnerID.String()).Logger()
+	partner, err := s.WalletRepo.GetPartnerByID(ctx, partnerID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get partner")
+		return nil, err
+	}
+	return partner, nil
 }

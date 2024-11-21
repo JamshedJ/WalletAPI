@@ -4,6 +4,3 @@ packages:
     interfaces:
       WalletRepositoryI:
         dir: "mocks/"
-      PartnerRepositoryI:
-        dir: "mocks/"
-

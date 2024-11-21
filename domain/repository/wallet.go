@@ -5,6 +5,7 @@ import (
 
 	"github.com/JamshedJ/WalletAPI/domain/dto"
 	"github.com/JamshedJ/WalletAPI/domain/entities"
+	"github.com/google/uuid"
 )
 
 type WalletRepositoryI interface {
@@ -15,4 +16,5 @@ type WalletRepositoryI interface {
 	UpdateWalletBalance(ctx context.Context, conn any, wallet *entities.Wallet) error
 	CreateTransaction(ctx context.Context, conn any, transaction *entities.Transaction) error
 	GetTransactions(ctx context.Context, conn any, params *dto.GetTransactionsIn) ([]*entities.Transaction, error)
+	GetPartnerByID(ctx context.Context, id uuid.UUID) (*entities.Partner, error)
 }

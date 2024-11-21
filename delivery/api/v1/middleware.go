@@ -8,19 +8,25 @@ import (
 
 	"github.com/JamshedJ/WalletAPI/infrastructure/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (ctrl *ControllerV1) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		partnerID := c.GetHeader("X-UserId")
+		partnerIDStr := c.GetHeader("X-UserId")
+		partnerID, err := uuid.Parse(partnerIDStr)
+		if err != nil {
+			handleError(c, err)
+			return
+		}
 		digest := c.GetHeader("X-Digest")
 
-		if partnerID == "" || digest == "" {
+		if partnerID == uuid.Nil || digest == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing authentication headers"})
 			return
 		}
 
-		partner, err := ctrl.Services.Partner.GetPartnerByID(c.Request.Context(), partnerID)
+		partner, err := ctrl.Services.Wallet.GetPartnerByID(c, partnerID)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid partner"})
 			return
